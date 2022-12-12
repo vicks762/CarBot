@@ -48,7 +48,20 @@ void EEPROM_GetData(){ //Library data startup
   Dacia.ArrayMaintenance[0].AddKM = 20;
 }
 
-void AutomaticMessages(){ //To be developed
+void AutomaticMessages(int nmaint){ //To be developed
+  int i = 0;
+  String OuputText = "MANTENIMIENTOS PENDIENTES\n";
+  for(i = 0; i < nmaint;i++){
+    if(Dacia.ArrayMaintenance[i].FutureMaint < Dacia.TotalKMs){
+      Dacia.ArrayMaintenance[i].activated = true;
+      switch(i){
+        case 0:
+          OuputText += "-El limpia esta guarruzo, no veo TwT\n";
+        break;
+      }
+    }
+  }
+  bot.sendMessage(CHAT_ID, OuputText);
 
 }
 
@@ -109,11 +122,12 @@ bool NewMessage(int NMessage){
         //int lastKms = Dacia.TotalKMs;
         String StrKMs = " ";
         StrKMs = InputText.substring(6);
+        Dacia.TotalKMs = StrKMs.toInt();
         OutputText += "Car chan has gone brrr for: ";
         OutputText += Dacia.TotalKMs;
         OutputText += "\nSaving into memory";
-        bot.sendMessage(CHAT_ID, OutputText);
-        Dacia.TotalKMs = StrKMs.toInt();
+        bot.sendMessage(guest_chat_id, OutputText);
+        AutomaticMessages(5);
         Serial.println("#Write kilometres request");
       }
     }
@@ -169,7 +183,7 @@ void loop() {
     timeClient.update();
     if(timeClient.getHours() == 16 && timeClient.getMinutes() == 0 && timeClient.getSeconds() == 0){
       Serial.println("Preparing automatic messages");
-      AutomaticMessages();
+      AutomaticMessages(5);
     }
     numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     EEPROM.end();
