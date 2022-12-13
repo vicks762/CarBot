@@ -19,22 +19,23 @@ UniversalTelegramBot bot(BOTtoken, client);
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
+const long utcOffsetInSeconds = 3600;
 
-typedef struct maint{
+struct maint{
   String Name;
   bool activated;
   int AddKM;
   unsigned long FutureMaint;
 };
 
-
+const int DefinedMaints = 5;
 struct car{ //Data structure for car data
   String Brand;
   String Model;
   String Plate;
   unsigned long TotalKMs;
 
-  maint ArrayMaintenance[4]; //Parabrisas, Aire de las ruedas, Aceite lubricante, Correa
+  maint ArrayMaintenance[DefinedMaints]; //Parabrisas, Aire de las ruedas, Aceite lubricante, Correa
 };
 
 car Dacia;
@@ -44,8 +45,22 @@ void EEPROM_GetData(){ //Library data startup
   EEPROM.commit();
   EEPROM.end();
   //Force configuration
+  
   Dacia.ArrayMaintenance[0].Name = "Parabrisas";
   Dacia.ArrayMaintenance[0].AddKM = 20;
+  Dacia.ArrayMaintenance[1].Name = "Presión neumáticos";
+  Dacia.ArrayMaintenance[1].AddKM = 20;
+  Dacia.ArrayMaintenance[2].Name = "Revisar Aceite (5W40)";
+  Dacia.ArrayMaintenance[2].AddKM = 50;
+  Dacia.ArrayMaintenance[3].Name = "Cambio de aceite";
+  Dacia.ArrayMaintenance[3].AddKM = 20000;
+  Dacia.ArrayMaintenance[3].FutureMaint = 59290;
+  Dacia.ArrayMaintenance[4].Name = "correa";
+  Dacia.ArrayMaintenance[4].FutureMaint = 100000;
+  Dacia.ArrayMaintenance[4].AddKM = 100000;
+  Dacia.Brand = "Dacia";
+  Dacia.Model = "Sandero Stepway";
+  Dacia.Plate = "8239JPC";
 }
 
 void AutomaticMessages(int nmaint){ //To be developed
@@ -58,13 +73,27 @@ void AutomaticMessages(int nmaint){ //To be developed
         case 0:
           OuputText += "-El limpia esta guarruzo, no veo TwT\n";
         break;
+        case 1:
+          OuputText += "-Los neumaticos parecen sad, mira la precion :3\n";
+        break;
+        case 2:
+          OuputText += "-El aceite parece un poco horny, hazle bonk uwu\n";
+        break;
+        case 3:
+          OuputText += "-El aceite está más negro que los cojones de tutankamon, cambialo ewe\n";
+        break;
+        case 4:
+          OuputText +="¿Correa? Pero qué correa, si no tengo perro, payaso";
+        break;
       }
+    }
+    else{
+      Dacia.ArrayMaintenance[i].activated = false;
     }
   }
   bot.sendMessage(CHAT_ID, OuputText);
 
 }
-
 
 bool NewMessage(int NMessage){
     int i = 0; //requestID;
@@ -127,10 +156,41 @@ bool NewMessage(int NMessage){
         OutputText += Dacia.TotalKMs;
         OutputText += "\nSaving into memory";
         bot.sendMessage(guest_chat_id, OutputText);
-        AutomaticMessages(5);
+        AutomaticMessages(DefinedMaints);
         Serial.println("#Write kilometres request");
       }
+      if(InputText == "/InformeSerio"){
+        int j = 0;
+        Serial.println("#Comenzando informe serio");
+        OutputText = "INFORME GENERAL DE MANTENIMIENTO DEL VEHÍCULO";
+        OutputText += "\nTipo de aceite: 5W40\n";
+        OutputText += "\nKilómetros totales registrados: ";
+        OutputText += String(Dacia.TotalKMs);
+        bot.sendMessage(CHAT_ID, OutputText);
+        OutputText = "AVISOS ACTIVOS";
+        for(j = 0; j < DefinedMaints; j++){
+            OutputText +="\n-";
+            OutputText += Dacia.ArrayMaintenance[j].Name;
+            if(Dacia.ArrayMaintenance[j].activated){
+                OutputText += (" - SI");
+            }
+            else{
+              OutputText += (" - NO - ");
+              OutputText +=(Dacia.TotalKMs);
+              OutputText += ("/");
+              OutputText += (Dacia.ArrayMaintenance[j].FutureMaint);
+              OutputText += " km";
+            }
+        }
+        
+        bot.sendMessage(CHAT_ID, OutputText);
+        Serial.println("#Finalizado informe serio");
+        
+      }
+
     }
+    Serial.print("#Ouput: ");
+    Serial.println(OutputText);
     //EEPROM update
     EEPROM.put(MemoryAddress, Dacia);
     EEPROM.commit();
@@ -181,9 +241,12 @@ void loop() {
   while(safety){
     safety = NewMessage(numNewMessages);
     timeClient.update();
-    if(timeClient.getHours() == 16 && timeClient.getMinutes() == 0 && timeClient.getSeconds() == 0){
+    Serial.print(timeClient.getHours());
+    Serial.print(timeClient.getMinutes());
+    Serial.println(timeClient.getSeconds());
+    if(timeClient.getHours() == 15 && timeClient.getMinutes() == 0 && (3 - timeClient.getSeconds() > 0)){
       Serial.println("Preparing automatic messages");
-      AutomaticMessages(5);
+      AutomaticMessages(DefinedMaints);
     }
     numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     EEPROM.end();
