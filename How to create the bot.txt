@@ -1,0 +1,6 @@
+1. Search in telegram for https://t.me/BotFather
+2. Once you find it, create the bot using /newbot and follow the steps of @BotFather
+3. When you finish creating your bot, you should get a token. Open "WiFI_Bot.hpp" in CarBot\CarDattaBot\src, search for variable BOTtoken, and put the number you got inside the "".
+4. Get your ID by writting /getid to https://t.me/myidbot so you can get your chat id. Go to the same file of the previous step and write the number in CHAT_ID string.
+
+Now you have your bot created, and it's only accesible for you.
