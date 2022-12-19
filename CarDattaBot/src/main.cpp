@@ -47,16 +47,16 @@ void EEPROM_GetData(){ //Library data startup
   //Force configuration
   
   Dacia.ArrayMaintenance[0].Name = "Parabrisas";
-  Dacia.ArrayMaintenance[0].AddKM = 20;
+  Dacia.ArrayMaintenance[0].AddKM = 100;
   Dacia.ArrayMaintenance[1].Name = "Presión neumáticos";
-  Dacia.ArrayMaintenance[1].AddKM = 20;
+  Dacia.ArrayMaintenance[1].AddKM = 100;
   Dacia.ArrayMaintenance[2].Name = "Revisar Aceite (5W40)";
-  Dacia.ArrayMaintenance[2].AddKM = 50;
+  Dacia.ArrayMaintenance[2].AddKM = 1000;
   Dacia.ArrayMaintenance[3].Name = "Cambio de aceite";
   Dacia.ArrayMaintenance[3].AddKM = 20000;
-  Dacia.ArrayMaintenance[3].FutureMaint = 59290;
-  Dacia.ArrayMaintenance[4].Name = "correa";
-  Dacia.ArrayMaintenance[4].FutureMaint = 100000;
+  //Dacia.ArrayMaintenance[3].FutureMaint = 59290;
+  Dacia.ArrayMaintenance[4].Name = "Correa";
+  //Dacia.ArrayMaintenance[4].FutureMaint = 100000;
   Dacia.ArrayMaintenance[4].AddKM = 100000;
   Dacia.Brand = "Dacia";
   Dacia.Model = "Sandero Stepway";
@@ -69,21 +69,23 @@ void AutomaticMessages(int nmaint){ //To be developed
   for(i = 0; i < nmaint;i++){
     if(Dacia.ArrayMaintenance[i].FutureMaint < Dacia.TotalKMs){
       Dacia.ArrayMaintenance[i].activated = true;
+      OuputText += "-";
+      OuputText += String(i);
       switch(i){
         case 0:
-          OuputText += "-El limpia esta guarruzo, no veo TwT\n";
+          OuputText += " El limpia esta guarruzo, no veo TwT\n";
         break;
         case 1:
-          OuputText += "-Los neumaticos parecen sad, mira la precion :3\n";
+          OuputText += " Los neumaticos parecen sad, mira la precion :3\n";
         break;
         case 2:
-          OuputText += "-El aceite parece un poco horny, hazle bonk uwu\n";
+          OuputText += " El aceite parece un poco horny, hazle bonk uwu\n";
         break;
         case 3:
-          OuputText += "-El aceite está más negro que los cojones de tutankamon, cambialo ewe\n";
+          OuputText += " El aceite está más negro que los cojones de tutankamon, cambialo ewe\n";
         break;
         case 4:
-          OuputText +="¿Correa? Pero qué correa, si no tengo perro, payaso";
+          OuputText +=" ¿Correa? Pero qué correa, si no tengo perro, payaso";
         break;
       }
     }
@@ -145,6 +147,7 @@ bool NewMessage(int NMessage){
         OutputText += Dacia.ArrayMaintenance[MaintDSelection - 48].Name;
         OutputText += "\nNext warning when Car chan reaches: ";
         OutputText += Dacia.ArrayMaintenance[MaintDSelection - 48].FutureMaint;
+        OutputText += " km";
         bot.sendMessage(guest_chat_id, OutputText);
       }
       if(InputText.startsWith("/SetKM")){ //User must send /SetKM followed by the number of KMs that are currently in the car
@@ -154,10 +157,20 @@ bool NewMessage(int NMessage){
         Dacia.TotalKMs = StrKMs.toInt();
         OutputText += "Car chan has gone brrr for: ";
         OutputText += Dacia.TotalKMs;
+        OutputText += " km";
         OutputText += "\nSaving into memory";
         bot.sendMessage(guest_chat_id, OutputText);
         AutomaticMessages(DefinedMaints);
         Serial.println("#Write kilometres request");
+      }
+      if(InputText == "/help"){
+        OutputText = "COMMAND LIST AND INFO\n";
+        OutputText += "CarAdministration bot, helps you with the maintenance of your car. You must remember to write car total kilometres so the bot can tell what maintenance must be done. Each day, at 16:00, you'll get a list of pending maintanances\n";
+        OutputText += "-/GetKM -> Prints car's total stored kms\n";
+        OutputText += "-/SetKMXXXX -> Writes car's total stored km into memory, XXXX would be in this case. Remember to upadte regularly as bot works with this data\n";
+        OutputText += "-/InformeSerio -> As the rest of the functions are a fckn joke, this one prints a serious reports for visitors\n";
+        OutputText += "-/MaintDoneX -> Sets maint ID X done, which must be active first. Also prints when it will be reactivated\n";
+        bot.sendMessage(guest_chat_id, OutputText);
       }
       if(InputText == "/InformeSerio"){
         int j = 0;
@@ -166,6 +179,7 @@ bool NewMessage(int NMessage){
         OutputText += "\nTipo de aceite: 5W40\n";
         OutputText += "\nKilómetros totales registrados: ";
         OutputText += String(Dacia.TotalKMs);
+        OutputText += " km";
         bot.sendMessage(CHAT_ID, OutputText);
         OutputText = "AVISOS ACTIVOS";
         for(j = 0; j < DefinedMaints; j++){
@@ -244,7 +258,7 @@ void loop() {
     Serial.print(timeClient.getHours());
     Serial.print(timeClient.getMinutes());
     Serial.println(timeClient.getSeconds());
-    if(timeClient.getHours() == 15 && timeClient.getMinutes() == 0 && (3 - timeClient.getSeconds() > 0)){
+    if(timeClient.getHours() == 15 && timeClient.getMinutes() == 0 && (5 - timeClient.getSeconds() > 0)){
       Serial.println("Preparing automatic messages");
       AutomaticMessages(DefinedMaints);
     }
